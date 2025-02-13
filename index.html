@@ -6,34 +6,43 @@
     <title>Countdown</title>
     <style>
         body {
-            background-color: #f5f5f5;
-            color: #333;
+            background-color: #ffffff;
+            color: #000000;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            font-family: Arial, sans-serif;
-            font-size: 2rem;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 3rem;
+            margin: 0;
         }
         #countdown {
-            font-weight: bold;
+            font-weight: 300;
+            text-align: center;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
-    <div id="countdown">365</div>
+    <div id="countdown"></div>
     <script>
-        let count = 365;
+        function calculateDays() {
+            const today = new Date();
+            const nextYear = today.getFullYear() + 1;
+            const targetDate = new Date(`February 12, ${nextYear}`);
+            const timeDiff = targetDate - today;
+            const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+            return daysLeft;
+        }
+
         const countdownElement = document.getElementById('countdown');
+        countdownElement.textContent = calculateDays() + " days until February 12th";
 
-        const countdown = setInterval(() => {
-            count--;
-            countdownElement.textContent = count;
-
-            if (count === 0) {
-                clearInterval(countdown);
-            }
-        }, 1000); // Change the interval as needed (1000ms = 1 second)
+        // Update the countdown daily
+        setInterval(() => {
+            countdownElement.textContent = calculateDays() + " days until February 12th";
+        }, 24 * 60 * 60 * 1000); // Update every 24 hours
     </script>
 </body>
 </html>
