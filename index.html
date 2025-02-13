@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown</title>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            font-size: 2rem;
+        }
+        #countdown {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="countdown">365</div>
+    <script>
+        let count = 365;
+        const countdownElement = document.getElementById('countdown');
+
+        const countdown = setInterval(() => {
+            count--;
+            countdownElement.textContent = count;
+
+            if (count === 0) {
+                clearInterval(countdown);
+            }
+        }, 1000); // Change the interval as needed (1000ms = 1 second)
+    </script>
+</body>
+</html>
