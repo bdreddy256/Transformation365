@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Timer PWA</title>
+    
+    <!-- PWA Manifest & Meta Tags for iOS -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007aff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="icon.png">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        .timer {
+            font-size: 6rem;
+            font-weight: 300;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .button {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #005bb5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="timer" id="timer">100</div>
+        <div class="buttons">
+            <button class="button" id="startBtn">Start</button>
+            <button class="button" id="stopBtn">Stop</button>
+            <button class="button" id="resumeBtn">Resume</button>
+        </div>
+    </div>
+
+    <script>
+        // Countdown Timer Logic
+        let countdown;
+        let timeLeft = 100;
+        let isRunning = false;
+
+        function updateTimer() {
+            document.getElementById('timer').textContent = timeLeft;
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                countdown = setInterval(() => {
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        isRunning = false;
+                    } else {
+                        timeLeft--;
+                        updateTimer();
+                    }
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(countdown);
+            isRunning = false;
+        }
+
+        function resumeTimer() {
+            startTimer();
+        }
+
+        document.getElementById('startBtn').addEventListener('click', startTimer);
+        document.getElementById('stopBtn').addEventListener('click', stopTimer);
+        document.getElementById('resumeBtn').addEventListener('click', resumeTimer);
+
+        updateTimer();
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker registered:', reg))
+                .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
