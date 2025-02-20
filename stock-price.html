@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Stock Prices - Robinhood Style</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 700px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1c2526;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .stock-table th, .stock-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #2f3839;
+        }
+        .stock-table th {
+            background: #252f30;
+            font-size: 14px;
+            font-weight: 500;
+            color: #a0a0a0;
+            text-transform: uppercase;
+        }
+        .stock-table td {
+            font-size: 16px;
+        }
+        .stock-symbol {
+            font-weight: 600;
+            color: #fff;
+        }
+        .stock-price {
+            font-weight: 500;
+            color: #21ce99;
+        }
+        .refresh-btn {
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin: 20px auto;
+            padding: 12px;
+            background: #21ce99;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .refresh-btn:hover {
+            background: #1ab07a;
+        }
+        .last-updated {
+            text-align: center;
+            font-size: 12px;
+            color: #a0a0a0;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stock Prices (Demo)</h1>
+        <table class="stock-table" id="stockTable">
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody id="stockBody"></tbody>
+        </table>
+        <button class="refresh-btn" onclick="fetchStockPrices()">Refresh Now</button>
+        <div class="last-updated" id="lastUpdated"></div>
+    </div>
+
+    <script>
+        const stockSymbols = [
+            'AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL',
+            'BRK.B', 'SPY', 'QQQ', 'QQQ'
+        ];
+
+        let mockPrices = {
+            'AAPL': 175.23, 'MSFT': 305.67, 'NVDA': 450.12, 'AMZN': 138.45, 'GOOGL': 142.89,
+            'BRK.B': 350.78, 'SPY': 430.56, 'QQQ': 360.91
+        };
+
+        const stockBody = document.getElementById('stockBody');
+        const lastUpdated = document.getElementById('lastUpdated');
+
+        function fetchStockPrices() {
+            stockBody.innerHTML = ''; // Clear table
+
+            stockSymbols.forEach(symbol => {
+                if (mockPrices[symbol]) {
+                    const currentPrice = mockPrices[symbol];
+                    const change = currentPrice * (Math.random() * 0.02 - 0.01); // ±1%
+                    mockPrices[symbol] = currentPrice + change;
+                } else {
+                    mockPrices[symbol] = 100 + Math.random() * 400; // For duplicates
+                }
+
+                const price = mockPrices[symbol].toFixed(2);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="stock-symbol">${symbol}</td>
+                    <td class="stock-price">$${price}</td>
+                `;
+                stockBody.appendChild(row);
+            });
+
+            const now = new Date().toLocaleTimeString();
+            lastUpdated.textContent = `Last updated: ${now}`;
+        }
+
+        // Initial load
+        fetchStockPrices();
+    </script>
+</body>
+</html>
