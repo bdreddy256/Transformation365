@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Stock Prices - Robinhood Style</title>
     <style>
         body {
@@ -105,7 +106,6 @@
             'BRK.B', 'SPY', 'QQQ', 'QQQ'
         ];
 
-        // Mock stock prices with initial values
         let mockPrices = {
             'AAPL': 175.23, 'MSFT': 305.67, 'NVDA': 450.12, 'AMZN': 138.45, 'GOOGL': 142.89,
             'BRK.B': 350.78, 'SPY': 430.56, 'QQQ': 360.91
@@ -115,17 +115,15 @@
         const lastUpdated = document.getElementById('lastUpdated');
 
         function fetchStockPrices() {
-            stockBody.innerHTML = ''; // Clear previous data
+            stockBody.innerHTML = '';
 
-            // Simulate price updates
             stockSymbols.forEach(symbol => {
-                // Randomly adjust price by ±1% for demo effect
                 if (mockPrices[symbol]) {
                     const currentPrice = mockPrices[symbol];
-                    const change = currentPrice * (Math.random() * 0.02 - 0.01); // ±1%
+                    const change = currentPrice * (Math.random() * 0.02 - 0.01);
                     mockPrices[symbol] = currentPrice + change;
                 } else {
-                    mockPrices[symbol] = 100 + Math.random() * 400; // Fallback for duplicates
+                    mockPrices[symbol] = 100 + Math.random() * 400;
                 }
 
                 const price = mockPrices[symbol].toFixed(2);
@@ -137,18 +135,12 @@
                 stockBody.appendChild(row);
             });
 
-            // Update timestamp
             const now = new Date().toLocaleTimeString();
             lastUpdated.textContent = `Last updated: ${now}`;
         }
 
-        // Initial fetch
         fetchStockPrices();
-
-        // Auto-refresh every 5 seconds
-        setInterval(() => {
-            fetchStockPrices();
-        }, 5000);
+        setInterval(fetchStockPrices, 5000);
     </script>
 </body>
 </html>
