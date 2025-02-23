@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thambola Game Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(10, 30px); gap: 5px; margin-top: 20px; }
+        .number { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; border-radius: 4px; }
+        .announced { background-color: #4caf50; color: white; }
+        button { margin: 10px; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        .announce-btn { background-color: #007bff; color: white; }
+        .reset-btn { background-color: #f44336; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Thambola Number Announcer</h1>
+    <button class="announce-btn" onclick="announceNumber()">Announce Next Number</button>
+    <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+    <div id="lastNumber" style="margin: 20px; font-size: 20px;"></div>
+    <div class="grid" id="numbersGrid"></div>
+
+    <script>
+        let announcedNumbers = JSON.parse(localStorage.getItem('announcedNumbers')) || [];
+        let resetCount = 0;
+        const numbersGrid = document.getElementById('numbersGrid');
+        const lastNumberDiv = document.getElementById('lastNumber');
+
+        function renderGrid() {
+            numbersGrid.innerHTML = '';
+            for (let i = 1; i <= 90; i++) {
+                const div = document.createElement('div');
+                div.className = 'number' + (announcedNumbers.includes(i) ? ' announced' : '');
+                div.textContent = i;
+                numbersGrid.appendChild(div);
+            }
+            const lastNumber = announcedNumbers[announcedNumbers.length - 1] || '';
+            lastNumberDiv.textContent = lastNumber ? 'Last Announced Number: ' + lastNumber : '';
+        }
+
+        function announceNumber() {
+            if (announcedNumbers.length >= 90) return;
+            let newNumber;
+            do {
+                newNumber = Math.floor(Math.random() * 90) + 1;
+            } while (announcedNumbers.includes(newNumber));
+            announcedNumbers.push(newNumber);
+            announcedNumbers.sort((a, b) => a - b);
+            localStorage.setItem('announcedNumbers', JSON.stringify(announcedNumbers));
+            renderGrid();
+        }
+
+        function resetGame() {
+            resetCount++;
+            if (resetCount >= 5) {
+                announcedNumbers = [];
+                localStorage.removeItem('announcedNumbers');
+                resetCount = 0;
+                alert('Game has been reset!');
+            }
+            renderGrid();
+        }
+
+        window.onload = renderGrid;
+    </script>
+</body>
+</html>
