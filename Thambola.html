@@ -1,0 +1,50 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+
+export default function ThambolaGame() {
+    const [announcedNumbers, setAnnouncedNumbers] = useState<number[]>([]);
+    const [lastNumber, setLastNumber] = useState<number | null>(null);
+
+    const announceNumber = () => {
+        if (announcedNumbers.length >= 90) return;
+        let newNumber;
+        do {
+            newNumber = Math.floor(Math.random() * 90) + 1;
+        } while (announcedNumbers.includes(newNumber));
+        setAnnouncedNumbers((prev) => [...prev, newNumber].sort((a, b) => a - b));
+        setLastNumber(newNumber);
+    };
+
+    const resetGame = () => {
+        setAnnouncedNumbers([]);
+        setLastNumber(null);
+    };
+
+    return (
+        <div className="p-4 flex flex-col items-center">
+            <h1 className="text-2xl font-bold mb-4">Thambola Number Announcer</h1>
+            <Button onClick={announceNumber} disabled={announcedNumbers.length >= 90} className="mb-4">
+                Announce Next Number
+            </Button>
+            {lastNumber !== null && (
+                <div className="text-xl mb-4">Last Announced Number: {lastNumber}</div>
+            )}
+            <Card className="w-full max-w-md">
+                <CardContent className="grid grid-cols-10 gap-2">
+                    {Array.from({ length: 90 }, (_, i) => i + 1).map((num) => (
+                        <div
+                            key={num}
+                            className={`p-2 border rounded ${announcedNumbers.includes(num) ? 'bg-green-500 text-white' : 'bg-gray-200'}`}
+                        >
+                            {num}
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+            <Button onClick={resetGame} className="mt-4 bg-red-500 text-white">
+                Reset Game
+            </Button>
+        </div>
+    );
+}
