@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gunnu's Thambola Game Tracker</title>
+    <title>Thambola Game Tracker</title>
     <style>
         body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .grid { display: grid; grid-template-columns: repeat(10, 30px); gap: 5px; margin-top: 20px; }
@@ -12,19 +12,24 @@
         button { margin: 10px; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
         .announce-btn { background-color: #007bff; color: white; }
         .reset-btn { background-color: #f44336; color: white; }
+        .order-btn { background-color: #ff9800; color: white; }
     </style>
 </head>
 <body>
     <h1>Thambola Number Announcer</h1>
     <button class="announce-btn" onclick="announceNumber()">Announce Next Number</button>
     <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+    <button class="order-btn" onclick="showAnnouncedOrder()">Show Announced Order</button>
     <div id="lastNumber" style="margin: 20px; font-size: 20px;"></div>
     <div class="grid" id="numbersGrid"></div>
+    <div id="announcedOrder" style="margin-top: 20px; font-size: 16px; color: #333;"></div>
 
     <script>
-        let announcedNumbers = [];
+        let announcedNumbers = JSON.parse(localStorage.getItem('announcedNumbers')) || [];
+        let resetCount = 0;
         const numbersGrid = document.getElementById('numbersGrid');
         const lastNumberDiv = document.getElementById('lastNumber');
+        const announcedOrderDiv = document.getElementById('announcedOrder');
 
         function renderGrid() {
             numbersGrid.innerHTML = '';
@@ -34,6 +39,8 @@
                 div.textContent = i;
                 numbersGrid.appendChild(div);
             }
+            const lastNumber = announcedNumbers[announcedNumbers.length - 1] || '';
+            lastNumberDiv.textContent = lastNumber ? 'Last Announced Number: ' + lastNumber : '';
         }
 
         function announceNumber() {
@@ -43,15 +50,27 @@
                 newNumber = Math.floor(Math.random() * 90) + 1;
             } while (announcedNumbers.includes(newNumber));
             announcedNumbers.push(newNumber);
-            announcedNumbers.sort((a, b) => a - b);
-            lastNumberDiv.textContent = 'Last Announced Number: ' + newNumber;
+            localStorage.setItem('announcedNumbers', JSON.stringify(announcedNumbers));
             renderGrid();
         }
 
         function resetGame() {
-            announcedNumbers = [];
-            lastNumberDiv.textContent = '';
+            resetCount++;
+            if (resetCount >= 5) {
+                announcedNumbers = [];
+                localStorage.removeItem('announcedNumbers');
+                resetCount = 0;
+                alert('Game has been reset!');
+            }
             renderGrid();
+        }
+
+        function showAnnouncedOrder() {
+            if (announcedNumbers.length === 0) {
+                announcedOrderDiv.textContent = 'No numbers announced yet.';
+            } else {
+                announcedOrderDiv.textContent = 'Announced Order: ' + announcedNumbers.join(', ');
+            }
         }
 
         window.onload = renderGrid;
