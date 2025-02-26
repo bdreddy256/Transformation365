@@ -12,43 +12,54 @@
         button:hover { background-color: #45a049; }
         .result { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 5px; }
         #map { height: 500px; margin: 10px 0; border-radius: 5px; }
-        .search-results { margin-top: 10px; max-height: 200px; overflow-y: auto; }
-        .place-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
-        .place-item:hover { background-color: #f5f5f5; }
-        .loading { margin: 10px 0; color: #666; }
     </style>
 </head>
 <body>
     <h1>Distance Calculator with Regional Search</h1>
-    <div>
-        <label for="search">Search for a region (city, country, etc.)</label>
-        <input type="text" id="search" placeholder="e.g., Dallas, Paris, London">
-        <button id="searchBtn">Search Region</button>
-        <div id="regionResult" class="result" style="display: none;"></div>
-    </div>
-    <div>
-        <label for="placeSearch">Search for places within the region</label>
-        <input type="text" id="placeSearch" placeholder="e.g., restaurant, park, hotel" disabled>
-        <button id="placeSearchBtn" disabled>Find Places</button>
-        <div id="searchResults" class="search-results"></div>
-    </div>
-    <div class="coordinates-container">
-        <div>
-            <h3>Point 1</h3>
-            <input type="number" id="lat1" placeholder="Latitude 1" step="any">
-            <input type="number" id="lon1" placeholder="Longitude 1" step="any">
-        </div>
-        <div>
-            <h3>Point 2</h3>
-            <input type="number" id="lat2" placeholder="Latitude 2" step="any">
-            <input type="number" id="lon2" placeholder="Longitude 2" step="any">
-        </div>
-    </div>
-    <button id="calculateBtn">Calculate Distance</button>
+    <input type="text" id="search" placeholder="Search for a city, town, or village">
+    <input type="text" id="placeSearch" placeholder="Search for a place within the selected region" disabled>
+    <select id="placesDropdown" disabled></select>
+    <input type="number" id="lat1" placeholder="Latitude 1">
+    <input type="number" id="lon1" placeholder="Longitude 1">
+    <input type="number" id="lat2" placeholder="Latitude 2">
+    <input type="number" id="lon2" placeholder="Longitude 2">
+    <button onclick="calculateDistance()">Calculate Distance</button>
     <div id="result" class="result"></div>
     <div id="map"></div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        function toRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        function calculateDistance() {
+            const lat1 = parseFloat(document.getElementById('lat1').value);
+            const lon1 = parseFloat(document.getElementById('lon1').value);
+            const lat2 = parseFloat(document.getElementById('lat2').value);
+            const lon2 = parseFloat(document.getElementById('lon2').value);
+
+            if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+                alert('Please enter valid latitude and longitude values.');
+                return;
+            }
+
+            const R = 6371; // Radius of the Earth in km
+            const φ1 = toRadians(lat1);
+            const φ2 = toRadians(lat2);
+            const Δφ = toRadians(lat2 - lat1);
+            const Δλ = toRadians(lon2 - lon1);
+
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c;
+
+            document.getElementById('result').innerHTML =
+                'Distance: ' + distance.toFixed(2) + ' km';
+        }
+
         const map = L.map('map').setView([20, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
@@ -56,44 +67,43 @@
 
         let markers = [];
         let regionBounds = null;
-        let regionName = '';
 
-        map.on('click', (e) => {
-            const { lat, lng } = e.latlng;
-            if (markers.length >= 2) {
-                map.removeLayer(markers[1]);
-                markers.pop();
-            }
-            const marker = L.marker([lat, lng]).addTo(map);
-            markers.push(marker);
-            if (markers.length === 1) {
-                document.getElementById('lat1').value = lat;
-                document.getElementById('lon1').value = lng;
-            } else if (markers.length === 2) {
-                document.getElementById('lat2').value = lat;
-                document.getElementById('lon2').value = lng;
+        document.getElementById('search').addEventListener('change', function() {
+            const query = this.value;
+            if (query) {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            const { lat, lon, boundingbox } = data[0];
+                            map.setView([lat, lon], 10);
+                            regionBounds = boundingbox.map(Number);
+                            document.getElementById('placeSearch').disabled = false;
+                        } else {
+                            alert('Location not found');
+                        }
+                    })
+                    .catch(() => alert('Error searching location'));
             }
         });
 
-        document.getElementById('searchBtn').addEventListener('click', function() {
-            const query = document.getElementById('search').value;
-            if (!query) return;
-            document.getElementById('regionResult').innerHTML = 'Searching...';
-            document.getElementById('regionResult').style.display = 'block';
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length > 0) {
-                        const { lat, lon, boundingbox, display_name } = data[0];
-                        regionBounds = boundingbox.map(Number);
-                        map.setView([lat, lon], 12);
-                        document.getElementById('regionResult').innerHTML = `<b>Selected region:</b> ${display_name}`;
-                        document.getElementById('placeSearch').disabled = false;
-                        document.getElementById('placeSearchBtn').disabled = false;
-                    }
-                });
+        document.getElementById('placeSearch').addEventListener('change', function() {
+            const placeQuery = this.value;
+            if (placeQuery && regionBounds) {
+                const [latMin, latMax, lonMin, lonMax] = regionBounds;
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeQuery)}&bounded=1&viewbox=${lonMin},${latMax},${lonMax},${latMin}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const dropdown = document.getElementById('placesDropdown');
+                        dropdown.innerHTML = '<option>Select a place</option>';
+                        data.forEach(place => {
+                            dropdown.innerHTML += `<option value="${place.lat},${place.lon}">${place.display_name}</option>`;
+                        });
+                        dropdown.disabled = false;
+                    })
+                    .catch(() => alert('Error searching place in region'));
+            }
         });
-
     </script>
 </body>
 </html>
