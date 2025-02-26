@@ -66,8 +66,25 @@
         }).addTo(map);
 
         let regionBounds = null;
+        let markers = [];
+
+        map.on('click', function(e) {
+            const { lat, lng } = e.latlng;
+            if (markers.length < 2) {
+                markers.push(L.marker([lat, lng]).addTo(map));
+                if (markers.length === 1) {
+                    document.getElementById('lat1').value = lat;
+                    document.getElementById('lon1').value = lng;
+                } else if (markers.length === 2) {
+                    document.getElementById('lat2').value = lat;
+                    document.getElementById('lon2').value = lng;
+                }
+            }
+        });
 
         document.getElementById('search').addEventListener('change', function() {
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
             const query = this.value;
             if (query) {
                 fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
