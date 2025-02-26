@@ -66,6 +66,7 @@
         }).addTo(map);
 
         let markers = [];
+        let regionBounds = null;
 
         map.on('click', function(e) {
             if (markers.length >= 2) {
@@ -93,8 +94,9 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.length > 0) {
-                            const { lat, lon } = data[0];
+                            const { lat, lon, boundingbox } = data[0];
                             map.setView([lat, lon], 10);
+                            regionBounds = boundingbox;
                             document.getElementById('placeSearch').disabled = false;
                         } else {
                             alert('Location not found');
@@ -106,9 +108,9 @@
 
         document.getElementById('placeSearch').addEventListener('change', function() {
             const placeQuery = this.value;
-            const region = document.getElementById('search').value;
-            if (placeQuery) {
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeQuery)}&bounded=1`)
+            if (placeQuery && regionBounds) {
+                const [latMin, latMax, lonMin, lonMax] = regionBounds;
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeQuery)}&bounded=1&viewbox=${lonMin},${latMax},${lonMax},${latMin}`)
                     .then(response => response.json())
                     .then(data => {
                         const dropdown = document.getElementById('placesDropdown');
