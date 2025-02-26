@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Distance Calculator with Map</title>
+    <title>Distance Calculator with Map Search</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
         input, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; }
@@ -15,7 +16,8 @@
     </style>
 </head>
 <body>
-    <h1>Distance Calculator with Map</h1>
+    <h1>Distance Calculator with Map Search</h1>
+    <input type="text" id="search" placeholder="Search for a place, city, or town">
     <input type="number" id="lat1" placeholder="Latitude 1">
     <input type="number" id="lon1" placeholder="Longitude 1">
     <input type="number" id="lat2" placeholder="Latitude 2">
@@ -25,6 +27,7 @@
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script>
         function toRadians(degrees) {
             return degrees * (Math.PI / 180);
@@ -81,6 +84,23 @@
             } else if (markers.length === 2) {
                 document.getElementById('lat2').value = lat.toFixed(6);
                 document.getElementById('lon2').value = lng.toFixed(6);
+            }
+        });
+
+        document.getElementById('search').addEventListener('change', function() {
+            const query = this.value;
+            if (query) {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            const { lat, lon } = data[0];
+                            map.setView([lat, lon], 10);
+                        } else {
+                            alert('Location not found');
+                        }
+                    })
+                    .catch(() => alert('Error searching location'));
             }
         });
     </script>
