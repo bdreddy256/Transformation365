@@ -12,28 +12,69 @@
         button:hover { background-color: #45a049; }
         .result { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 5px; }
         #map { height: 500px; margin: 10px 0; border-radius: 5px; }
+        #placesDropdown { height: auto; max-height: 200px; }
+        .coordinates-container { display: flex; gap: 10px; }
+        .coordinates-container div { flex: 1; }
+        .search-results { margin-top: 10px; max-height: 200px; overflow-y: auto; }
+        .place-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .place-item:hover { background-color: #f5f5f5; }
+        .loading { margin: 10px 0; color: #666; }
     </style>
 </head>
 <body>
     <h1>Distance Calculator with Regional Search</h1>
-    <input type="text" id="search" placeholder="Search for a city, town, or village">
-    <input type="text" id="placeSearch" placeholder="Search for a place within the selected region" disabled>
-    <select id="placesDropdown" disabled></select>
-    <input type="number" id="lat1" placeholder="Latitude 1">
-    <input type="number" id="lon1" placeholder="Longitude 1">
-    <input type="number" id="lat2" placeholder="Latitude 2">
-    <input type="number" id="lon2" placeholder="Longitude 2">
-    <button onclick="calculateDistance()">Calculate Distance</button>
+    
+    <div>
+        <label for="search">Step 1: Search for a region (city, country, etc.)</label>
+        <input type="text" id="search" placeholder="e.g., London, Paris, New York">
+        <button id="searchBtn">Search Region</button>
+        <div id="regionResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div>
+        <label for="placeSearch">Step 2: Search for places within the selected region</label>
+        <input type="text" id="placeSearch" placeholder="e.g., restaurant, park, museum" disabled>
+        <button id="placeSearchBtn" disabled>Find Places</button>
+        <div id="searchResults" class="search-results"></div>
+    </div>
+    
+    <div class="coordinates-container">
+        <div>
+            <h3>Point 1</h3>
+            <input type="number" id="lat1" placeholder="Latitude 1" step="any">
+            <input type="number" id="lon1" placeholder="Longitude 1" step="any">
+        </div>
+        <div>
+            <h3>Point 2</h3>
+            <input type="number" id="lat2" placeholder="Latitude 2" step="any">
+            <input type="number" id="lon2" placeholder="Longitude 2" step="any">
+        </div>
+    </div>
+    
+    <button id="calculateBtn">Calculate Distance</button>
     <div id="result" class="result"></div>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Initialize map
+        const map = L.map('map').setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Global variables
+        let markers = [];
+        let regionBounds = null;
+        let regionMarker = null;
+        let regionName = '';
+
+        // Helper functions
         function toRadians(degrees) {
             return degrees * (Math.PI / 180);
         }
 
-        function calculateDistance() {
+        function calculateHaversineDistance() {
             const lat1 = parseFloat(document.getElementById('lat1').value);
             const lon1 = parseFloat(document.getElementById('lon1').value);
             const lat2 = parseFloat(document.getElementById('lat2').value);
@@ -57,53 +98,172 @@
             const distance = R * c;
 
             document.getElementById('result').innerHTML =
-                'Distance: ' + distance.toFixed(2) + ' km';
+                `<h3>Distance Result</h3>
+                <p>Distance between the two points: ${distance.toFixed(2)} km</p>
+                <p>Point 1: ${lat1.toFixed(6)}, ${lon1.toFixed(6)}</p>
+                <p>Point 2: ${lat2.toFixed(6)}, ${lon2.toFixed(6)}</p>`;
+
+            // Draw line between points
+            if (markers.length >= 2) {
+                // Create a line between the two points
+                const line = L.polyline([
+                    [lat1, lon1],
+                    [lat2, lon2]
+                ], {
+                    color: 'blue',
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '5, 10'
+                }).addTo(map);
+                
+                // Fit map to include both points
+                map.fitBounds(line.getBounds(), { padding: [50, 50] });
+            }
         }
 
-        const map = L.map('map').setView([20, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        // Clear all markers from the map
+        function clearMarkers() {
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+        }
 
-        let markers = [];
-        let regionBounds = null;
+        // Search for a region
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            const query = document.getElementById('search').value;
+            if (!query) return;
 
-        document.getElementById('search').addEventListener('change', function() {
-            const query = this.value;
-            if (query) {
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.length > 0) {
-                            const { lat, lon, boundingbox } = data[0];
-                            map.setView([lat, lon], 10);
-                            regionBounds = boundingbox.map(Number);
-                            document.getElementById('placeSearch').disabled = false;
-                        } else {
-                            alert('Location not found');
-                        }
-                    })
-                    .catch(() => alert('Error searching location'));
-            }
+            // Show loading message
+            document.getElementById('regionResult').innerHTML = 'Searching for region...';
+            document.getElementById('regionResult').style.display = 'block';
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const { lat, lon, boundingbox, display_name } = data[0];
+                        
+                        // Clear previous region marker
+                        if (regionMarker) map.removeLayer(regionMarker);
+                        
+                        // Set region info
+                        regionName = display_name;
+                        regionBounds = boundingbox.map(Number);
+                        
+                        // Create region marker
+                        regionMarker = L.marker([lat, lon], {
+                            icon: L.icon({
+                                iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                                shadowSize: [41, 41]
+                            })
+                        }).addTo(map);
+                        regionMarker.bindPopup(`<b>Region:</b> ${display_name}`).openPopup();
+                        
+                        // Draw region bounds
+                        const bounds = L.latLngBounds(
+                            [regionBounds[0], regionBounds[2]],
+                            [regionBounds[1], regionBounds[3]]
+                        );
+                        
+                        map.fitBounds(bounds);
+                        
+                        // Enable place search
+                        document.getElementById('placeSearch').disabled = false;
+                        document.getElementById('placeSearchBtn').disabled = false;
+                        
+                        // Update region result
+                        document.getElementById('regionResult').innerHTML = 
+                            `<b>Selected region:</b> ${display_name}
+                            <p>Now you can search for places within this region.</p>`;
+                    } else {
+                        document.getElementById('regionResult').innerHTML = 'Location not found. Please try a different search term.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('regionResult').innerHTML = 'Error searching location. Please try again.';
+                });
         });
 
-        document.getElementById('placeSearch').addEventListener('change', function() {
-            const placeQuery = this.value;
-            if (placeQuery && regionBounds) {
-                const [latMin, latMax, lonMin, lonMax] = regionBounds;
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeQuery)}&bounded=1&viewbox=${lonMin},${latMax},${lonMax},${latMin}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const dropdown = document.getElementById('placesDropdown');
-                        dropdown.innerHTML = '<option>Select a place</option>';
-                        data.forEach(place => {
-                            dropdown.innerHTML += `<option value="${place.lat},${place.lon}">${place.display_name}</option>`;
+        // Search for places within the region
+        document.getElementById('placeSearchBtn').addEventListener('click', function() {
+            const placeQuery = document.getElementById('placeSearch').value;
+            if (!placeQuery || !regionBounds) return;
+
+            // Show loading
+            document.getElementById('searchResults').innerHTML = '<div class="loading">Searching for places...</div>';
+
+            // Calculate the viewport parameters
+            const [minLat, maxLat, minLon, maxLon] = regionBounds;
+            
+            // Use both bounded search and geographical area filter for better results
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeQuery)}&bounded=1&viewbox=${minLon},${maxLat},${maxLon},${minLat}&limit=50`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear previous search results
+                    document.getElementById('searchResults').innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        document.getElementById('searchResults').innerHTML = 
+                            `<div class="place-item">No places found matching "${placeQuery}" in this region. Try a different search term.</div>`;
+                        return;
+                    }
+                    
+                    // Display search results
+                    data.forEach((place, index) => {
+                        const placeItem = document.createElement('div');
+                        placeItem.className = 'place-item';
+                        placeItem.innerHTML = `
+                            <strong>${place.display_name.split(',')[0]}</strong>
+                            <div>${place.display_name}</div>
+                        `;
+                        
+                        // Add click event to select place
+                        placeItem.addEventListener('click', function() {
+                            // Add marker to map
+                            const marker = L.marker([place.lat, place.lon]).addTo(map);
+                            marker.bindPopup(`<b>${place.display_name}</b>`).openPopup();
+                            markers.push(marker);
+                            
+                            // If this is the first marker, set it as point 1
+                            if (markers.length === 1) {
+                                document.getElementById('lat1').value = place.lat;
+                                document.getElementById('lon1').value = place.lon;
+                            } 
+                            // If this is the second marker, set it as point 2
+                            else if (markers.length === 2) {
+                                document.getElementById('lat2').value = place.lat;
+                                document.getElementById('lon2').value = place.lon;
+                            } 
+                            // If we already have two markers, replace the second one
+                            else if (markers.length > 2) {
+                                map.removeLayer(markers[1]);
+                                markers[1] = marker;
+                                document.getElementById('lat2').value = place.lat;
+                                document.getElementById('lon2').value = place.lon;
+                            }
+                            
+                            // Fly to the selected place
+                            map.flyTo([place.lat, place.lon], 15);
                         });
-                        dropdown.disabled = false;
-                    })
-                    .catch(() => alert('Error searching place in region'));
-            }
+                        
+                        document.getElementById('searchResults').appendChild(placeItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('searchResults').innerHTML = 
+                        '<div class="place-item">Error searching for places. Please try again.</div>';
+                });
         });
+
+        // Calculate distance button
+        document.getElementById('calculateBtn').addEventListener('click', calculateHaversineDistance);
     </script>
 </body>
 </html>
