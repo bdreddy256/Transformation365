@@ -96,7 +96,7 @@
                         if (data.length > 0) {
                             const { lat, lon, boundingbox } = data[0];
                             map.setView([lat, lon], 10);
-                            regionBounds = boundingbox;
+                            regionBounds = boundingbox.map(Number);
                             document.getElementById('placeSearch').disabled = false;
                         } else {
                             alert('Location not found');
