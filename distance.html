@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-        input, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; }
+        input, button, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; }
         button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #45a049; }
         .result { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 5px; }
@@ -19,6 +19,7 @@
     <h1>Distance Calculator with Regional Search</h1>
     <input type="text" id="search" placeholder="Search for a city, town, or village">
     <input type="text" id="placeSearch" placeholder="Search for a place within the selected region" disabled>
+    <select id="placesDropdown" disabled></select>
     <input type="number" id="lat1" placeholder="Latitude 1">
     <input type="number" id="lon1" placeholder="Longitude 1">
     <input type="number" id="lat2" placeholder="Latitude 2">
@@ -60,7 +61,6 @@
                 'Distance: ' + distance.toFixed(2) + ' km';
         }
 
-        // Initialize Leaflet Map
         const map = L.map('map').setView([20, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
@@ -107,20 +107,27 @@
 
         document.getElementById('placeSearch').addEventListener('change', function() {
             const placeQuery = this.value;
+            const region = document.getElementById('search').value;
             if (placeQuery) {
-                const region = document.getElementById('search').value;
                 fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeQuery + ' ' + region)}`)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.length > 0) {
-                            const { lat, lon } = data[0];
-                            map.setView([lat, lon], 14);
-                            L.marker([lat, lon]).addTo(map);
-                        } else {
-                            alert('Place not found in the selected region');
-                        }
+                        const dropdown = document.getElementById('placesDropdown');
+                        dropdown.innerHTML = '<option>Select a place</option>';
+                        data.forEach(place => {
+                            dropdown.innerHTML += `<option value="${place.lat},${place.lon}">${place.display_name}</option>`;
+                        });
+                        dropdown.disabled = false;
                     })
                     .catch(() => alert('Error searching place in region'));
+            }
+        });
+
+        document.getElementById('placesDropdown').addEventListener('change', function() {
+            const [lat, lon] = this.value.split(',');
+            if (lat && lon) {
+                map.setView([lat, lon], 14);
+                L.marker([lat, lon]).addTo(map);
             }
         });
     </script>
