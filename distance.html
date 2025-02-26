@@ -68,25 +68,6 @@
         let markers = [];
         let regionBounds = null;
 
-        map.on('click', function(e) {
-            if (markers.length >= 2) {
-                markers.forEach(marker => map.removeLayer(marker));
-                markers = [];
-            }
-
-            const { lat, lng } = e.latlng;
-            const marker = L.marker([lat, lng]).addTo(map);
-            markers.push(marker);
-
-            if (markers.length === 1) {
-                document.getElementById('lat1').value = lat.toFixed(6);
-                document.getElementById('lon1').value = lng.toFixed(6);
-            } else if (markers.length === 2) {
-                document.getElementById('lat2').value = lat.toFixed(6);
-                document.getElementById('lon2').value = lng.toFixed(6);
-            }
-        });
-
         document.getElementById('search').addEventListener('change', function() {
             const query = this.value;
             if (query) {
@@ -121,14 +102,6 @@
                         dropdown.disabled = false;
                     })
                     .catch(() => alert('Error searching place in region'));
-            }
-        });
-
-        document.getElementById('placesDropdown').addEventListener('change', function() {
-            const [lat, lon] = this.value.split(',');
-            if (lat && lon) {
-                map.setView([lat, lon], 14);
-                L.marker([lat, lon]).addTo(map);
             }
         });
     </script>
