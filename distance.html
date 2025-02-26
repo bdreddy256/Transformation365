@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distance Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+        input, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ddd; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .result { margin-top: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Distance Calculator</h1>
+    <input type="number" id="lat1" placeholder="Latitude 1">
+    <input type="number" id="lon1" placeholder="Longitude 1">
+    <input type="number" id="lat2" placeholder="Latitude 2">
+    <input type="number" id="lon2" placeholder="Longitude 2">
+    <button onclick="calculateDistance()">Calculate Distance</button>
+    <div id="result" class="result"></div>
+
+    <script>
+        function toRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        function calculateDistance() {
+            const lat1 = parseFloat(document.getElementById('lat1').value);
+            const lon1 = parseFloat(document.getElementById('lon1').value);
+            const lat2 = parseFloat(document.getElementById('lat2').value);
+            const lon2 = parseFloat(document.getElementById('lon2').value);
+
+            if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+                alert('Please enter valid latitude and longitude values.');
+                return;
+            }
+
+            const R = 6371; // Radius of the Earth in km
+            const φ1 = toRadians(lat1);
+            const φ2 = toRadians(lat2);
+            const Δφ = toRadians(lat2 - lat1);
+            const Δλ = toRadians(lon2 - lon1);
+
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c;
+
+            document.getElementById('result').innerHTML =
+                'Distance: ' + distance.toFixed(2) + ' km';
+        }
+    </script>
+</body>
+</html>
