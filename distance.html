@@ -24,6 +24,7 @@
     <input type="number" id="lat2" placeholder="Latitude 2">
     <input type="number" id="lon2" placeholder="Longitude 2">
     <button onclick="calculateDistance()">Calculate Distance</button>
+    <button onclick="resetMarkers()">Reset Points</button>
     <div id="result" class="result"></div>
     <div id="map"></div>
 
@@ -68,10 +69,20 @@
         let regionBounds = null;
         let markers = [];
 
+        function resetMarkers() {
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            document.getElementById('lat1').value = '';
+            document.getElementById('lon1').value = '';
+            document.getElementById('lat2').value = '';
+            document.getElementById('lon2').value = '';
+        }
+
         map.on('click', function(e) {
             const { lat, lng } = e.latlng;
             if (markers.length < 2) {
-                markers.push(L.marker([lat, lng]).addTo(map));
+                const marker = L.marker([lat, lng]).addTo(map);
+                markers.push(marker);
                 if (markers.length === 1) {
                     document.getElementById('lat1').value = lat;
                     document.getElementById('lon1').value = lng;
@@ -82,44 +93,6 @@
             }
         });
 
-        document.getElementById('search').addEventListener('change', function() {
-            markers.forEach(marker => map.removeLayer(marker));
-            markers = [];
-            const query = this.value;
-            if (query) {
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.length > 0) {
-                            const { lat, lon, boundingbox } = data[0];
-                            map.setView([lat, lon], 10);
-                            regionBounds = boundingbox.map(Number);
-                            document.getElementById('placeSearch').disabled = false;
-                        } else {
-                            alert('Location not found');
-                        }
-                    })
-                    .catch(() => alert('Error searching location'));
-            }
-        });
-
-        document.getElementById('placeSearch').addEventListener('input', function() {
-            const placeQuery = this.value;
-            if (placeQuery && regionBounds) {
-                const [latMin, latMax, lonMin, lonMax] = regionBounds;
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeQuery)}&bounded=1&viewbox=${lonMin},${latMax},${lonMax},${latMin}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const dropdown = document.getElementById('placesDropdown');
-                        dropdown.innerHTML = '<option>Select a place</option>';
-                        data.forEach(place => {
-                            dropdown.innerHTML += `<option value="${place.lat},${place.lon}">${place.display_name}</option>`;
-                        });
-                        dropdown.disabled = false;
-                    })
-                    .catch(() => alert('Error searching place in region'));
-            }
-        });
     </script>
 </body>
 </html>
