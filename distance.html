@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Distance Calculator with Map Search</title>
+    <title>Distance Calculator with Regional Search</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <style>
@@ -16,8 +16,9 @@
     </style>
 </head>
 <body>
-    <h1>Distance Calculator with Map Search</h1>
-    <input type="text" id="search" placeholder="Search for a place, city, or town">
+    <h1>Distance Calculator with Regional Search</h1>
+    <input type="text" id="search" placeholder="Search for a city, town, or village">
+    <input type="text" id="placeSearch" placeholder="Search for a place within the selected region" disabled>
     <input type="number" id="lat1" placeholder="Latitude 1">
     <input type="number" id="lon1" placeholder="Longitude 1">
     <input type="number" id="lat2" placeholder="Latitude 2">
@@ -27,7 +28,6 @@
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script>
         function toRadians(degrees) {
             return degrees * (Math.PI / 180);
@@ -96,11 +96,31 @@
                         if (data.length > 0) {
                             const { lat, lon } = data[0];
                             map.setView([lat, lon], 10);
+                            document.getElementById('placeSearch').disabled = false;
                         } else {
                             alert('Location not found');
                         }
                     })
                     .catch(() => alert('Error searching location'));
+            }
+        });
+
+        document.getElementById('placeSearch').addEventListener('change', function() {
+            const placeQuery = this.value;
+            if (placeQuery) {
+                const region = document.getElementById('search').value;
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeQuery + ' ' + region)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            const { lat, lon } = data[0];
+                            map.setView([lat, lon], 14);
+                            L.marker([lat, lon]).addTo(map);
+                        } else {
+                            alert('Place not found in the selected region');
+                        }
+                    })
+                    .catch(() => alert('Error searching place in region'));
             }
         });
     </script>
