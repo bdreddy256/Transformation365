@@ -103,7 +103,7 @@
             }
         });
 
-        document.getElementById('placeSearch').addEventListener('change', function() {
+        document.getElementById('placeSearch').addEventListener('input', function() {
             const placeQuery = this.value;
             if (placeQuery && regionBounds) {
                 const [latMin, latMax, lonMin, lonMax] = regionBounds;
