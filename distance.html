@@ -16,7 +16,7 @@
 </head>
 <body>
     <h1>Distance Calculator with Regional Search</h1>
-    <input type="text" id="search" placeholder="Search for a city, town, or village">
+    <input type="text" id="search" placeholder="Search for a city, town, or village" onchange="searchRegion()">
     <input type="text" id="placeSearch" placeholder="Search for a place within the selected region" disabled>
     <select id="placesDropdown" disabled></select>
     <input type="number" id="lat1" placeholder="Latitude 1">
@@ -92,6 +92,21 @@
                 }
             }
         });
+
+        async function searchRegion() {
+            const query = document.getElementById('search').value;
+            if (!query) return;
+
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+            const data = await response.json();
+
+            if (data.length > 0) {
+                const bounds = [[data[0].boundingbox[0], data[0].boundingbox[2]], [data[0].boundingbox[1], data[0].boundingbox[3]]];
+                map.fitBounds(bounds);
+                regionBounds = bounds;
+                document.getElementById('placeSearch').disabled = false;
+            }
+        }
 
     </script>
 </body>
