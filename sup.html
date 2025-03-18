@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supplement Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #ddd;
+        }
+
+        li button {
+            background-color: #f44336;
+        }
+
+        li button:hover {
+            background-color: #e53935;
+        }
+
+        .taken-info {
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Supplement Tracker</h1>
+        <div class="input-section">
+            <input type="text" id="supplement-name" placeholder="Add supplement..." />
+            <button onclick="addSupplement()">Add</button>
+        </div>
+        <ul id="supplement-list"></ul>
+    </div>
+
+    <script>
+        // Load supplements from localStorage
+        document.addEventListener('DOMContentLoaded', loadSupplements);
+
+        function loadSupplements() {
+            const supplements = JSON.parse(localStorage.getItem('supplements')) || [];
+            const list = document.getElementById('supplement-list');
+            list.innerHTML = '';
+
+            supplements.forEach((supplement, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div>
+                        <strong>${supplement.name}</strong>
+                        ${supplement.takenAt ? `<div class="taken-info">Taken at: ${supplement.takenAt}</div>` : ''}
+                    </div>
+                    <div>
+                        ${!supplement.takenAt ? `<button onclick="markAsTaken(${index})">Mark as Taken</button>` : ''}
+                        <button onclick="deleteSupplement(${index})">Delete</button>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function addSupplement() {
+            const input = document.getElementById('supplement-name');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const supplements = JSON.parse(localStorage.getItem('supplements')) || [];
+            supplements.push({ name, takenAt: null });
+            localStorage.setItem('supplements', JSON.stringify(supplements));
+            input.value = '';
+            loadSupplements();
+        }
+
+        function markAsTaken(index) {
+            const supplements = JSON.parse(localStorage.getItem('supplements'));
+            supplements[index].takenAt = new Date().toLocaleString();
+            localStorage.setItem('supplements', JSON.stringify(supplements));
+            loadSupplements();
+        }
+
+        function deleteSupplement(index) {
+            const supplements = JSON.parse(localStorage.getItem('supplements'));
+            supplements.splice(index, 1);
+            localStorage.setItem('supplements', JSON.stringify(supplements));
+            loadSupplements();
+        }
+    </script>
+</body>
+</html>
