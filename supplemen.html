@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supplement Weekly Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .supplement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            padding: 6px 12px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background-color: #e53935;
+        }
+
+        .week-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .day {
+            padding: 10px;
+            text-align: center;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .day.taken {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Supplement Weekly Tracker</h1>
+        <div class="input-section">
+            <input type="text" id="supplement-name" placeholder="Add supplement..." />
+            <button onclick="addSupplement()">Add</button>
+        </div>
+        <ul id="supplement-list"></ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadSupplements);
+
+        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        function loadSupplements() {
+            const supplements = JSON.parse(localStorage.getItem('supplements')) || [];
+            const list = document.getElementById('supplement-list');
+            list.innerHTML = '';
+
+            supplements.forEach((supplement, index) => {
+                const li = document.createElement('li');
+                const weekStatus = supplement.weekStatus || new Array(7).fill(false);
+
+                li.innerHTML = `
+                    <div class="supplement-header">
+                        <div>${supplement.name}</div>
+                        <button class="delete-btn" onclick="deleteSupplement(${index})">Delete</button>
+                    </div>
+                    <div class="week-grid">
+                        ${daysOfWeek.map((day, dayIndex) => `
+                            <div 
+                                class="day ${weekStatus[dayIndex] ? 'taken' : ''}" 
+                                onclick="toggleDay(${index}, ${dayIndex})">
+                                ${day}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                list.appendChild(li);
+            });
+        }
+
+        function addSupplement() {
+            const input = document.getElementById('supplement-name');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const supplements = JSON.parse(localStorage.getItem('supplements')) || [];
+            supplements.push({ name, weekStatus: new Array(7).fill(false) });
+            localStorage.setItem('supplements', JSON.stringify(supplements));
+            input.value = '';
+            loadSupplements();
+        }
+
+        function toggleDay(supplementIndex, dayIndex) {
+            const supplements = JSON.parse(localStorage.getItem('supplements'));
+
+            // Toggle status for the day
+            supplements[supplementIndex].weekStatus[dayIndex] = !supplements[supplementIndex].weekStatus[dayIndex];
+
+            localStorage.setItem('supplements', JSON.stringify(supplements));
+            loadSupplements();
+        }
+
+        function deleteSupplement(index) {
+            const supplements = JSON.parse(localStorage.getItem('supplements'));
+            supplements.splice(index, 1);
+            localStorage.setItem('supplements', JSON.stringify(supplements));
+            loadSupplements();
+        }
+    </script>
+</body>
+</html>
