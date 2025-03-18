@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supplement Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-top: 5px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .supplement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .history {
+            font-size: 12px;
+            color: #888;
+            margin-top: 8px;
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .history div {
+            padding: 2px 6px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            margin-left: 8px;
+        }
+
+        .delete-btn:hover {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Supplement Tracker</h1>
+        <div class="input-section">
+            <input type="text" id="supplement-name" placeholder="Add supplement..." />
+            <button onclick="addSupplement()">Add</button>
+        </div>
+        <ul id="supplement-list"></ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadSupplements);
+
+        function loadSupplements() {
+            const supplements = JSON.parse(localStorage.getItem('supplements')) || [];
+            const list = document.getElementById('supplement-list');
+            list.innerHTML = '';
+
+            supplements.forEach((supplement, index) => {
+                const li = document.createElement('li');
+
+                let history = supplement.history || [];
+
+                // Only keep the last 7 days of history
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                history = history.filter(date => new Date(date) >= sevenDaysAgo);
+
+                li.innerHTML = `
+                    <div class="supplement-header">
+                        <div>${supplement.name}</div>
+                        <div>
+                            <button onclick="markAsTaken(${index})">Mark as Taken</button>
+                            <button class="delete-btn" onclick="deleteSupplement(${index})">Delete</button>
+                        </div>
+                    </div>
+                    <div class="history">
+                        ${history.length > 0 ? history.map(date => `<div>${new Date(date).toLocaleDateString()}</div>`).join('') : 'No history'}
+                    </div>
+                `;
+
+                list.appendChild(li);
+            });
+        }
+
+        function addSupplement() {
+            const input = document.getElementById('supplement-name');
+            const name = input.value.trim();
+            if (!name) return;
+
+            const supplements = JSON.parse(localStorage.getItem('supplements')) || [];
+            supplements.push({ name, history: [] });
+            localStorage.setItem('supplements', JSON.stringify(supplements));
+            input.value = '';
+            loadSupplements();
+        }
+
+        function markAsTaken(index) {
+            const supplements = JSON.parse(localStorage.getItem('supplements'));
+            const today = new Date().toISOString();
+
+            // Prevent duplicate marks for the same day
+            if (!supplements[index].history.includes(today.split('T')[0])) {
+                supplements[index].history.push(today);
+            }
+
+            localStorage.setItem('supplements', JSON.stringify(supplements));
+            loadSupplements();
+        }
+
+        function deleteSupplement(index) {
+            const supplements = JSON.parse(localStorage.getItem('supplements'));
+            supplements.splice(index, 1);
+            localStorage.setItem('supplements', JSON.stringify(supplements));
+            loadSupplements();
+        }
+    </script>
+</body>
+</html>
