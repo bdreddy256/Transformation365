@@ -96,22 +96,23 @@
   <h1>Todo App</h1>
   <div class="todo-container">
     <input type="text" id="todo-input" placeholder="Add a new todo..." />
-    <button onclick="addTodo()">Add Todo</button>
+    <button id="add-todo-btn">Add Todo</button>
 
     <div class="todo-list" id="todo-list"></div>
   </div>
 
   <!-- Firebase SDK -->
   <script type="module">
-    // 👉 INSERT FIREBASE CONFIG HERE 👇
+    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    // Firebase config
     const firebaseConfig = {
-      apiKey: "IzaSyCVViLvx3bHRWJwKMnVUZvE776g3v0BBmU",
+      apiKey: "AIzaSyCVViLvx3bHRWJwKMnVUZvE776g3v0BBmU",
       authDomain: "todo-bcab9.firebaseapp.com",
       projectId: "todo-bcab9",
-      storageBucket: "todo-bcab9.appspot.com", // ✅ Fixed this
+      storageBucket: "todo-bcab9.appspot.com",
       messagingSenderId: "170910719630",
       appId: "1:170910719630:web:5f001878e8ad647410b3df",
       measurementId: "G-XM43GED4G5"
@@ -121,11 +122,14 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let editId = null;
+    // DOM references
     const todoInput = document.getElementById('todo-input');
     const todoList = document.getElementById('todo-list');
+    const addTodoButton = document.getElementById('add-todo-btn');
+    
+    let editId = null;
 
-    // ✅ Add Todo
+    // Add Todo function
     async function addTodo() {
       const text = todoInput.value.trim();
       if (text) {
@@ -143,7 +147,7 @@
       }
     }
 
-    // ✅ Load Todos
+    // Load todos from Firestore
     async function loadTodos() {
       todoList.innerHTML = '';
       const querySnapshot = await getDocs(collection(db, 'todos'));
@@ -159,41 +163,28 @@
             <button class="delete-btn" onclick="deleteTodo('${doc.id}')">Delete</button>
           </div>
         `;
-
         todoList.appendChild(todoItem);
       });
     }
 
-    // ✅ Edit Todo
+    // Edit Todo
     function editTodo(id, text) {
       todoInput.value = text;
       editId = id;
     }
 
-    // ✅ Delete Todo
+    // Delete Todo
     async function deleteTodo(id) {
       await deleteDoc(doc(db, 'todos', id));
       loadTodos();
     }
 
-    // ✅ Load Todos on Page Load
+    // Event listener for Add Todo button
+    addTodoButton.addEventListener('click', addTodo);
+
+    // Load todos on page load
     loadTodos();
-
-    // ✅ Debugging Helper
-    console.log("Firebase config loaded:", firebaseConfig);
-
-    const testConnection = async () => {
-      try {
-        const docRef = await addDoc(collection(db, 'todos'), { text: "Test Todo" });
-        console.log("Test doc written with ID: ", docRef.id);
-      } catch (e) {
-        console.error("Error adding document: ", e);
-      }
-    };
-
-    // Test Firebase connection
-    testConnection();
-
   </script>
+
 </body>
 </html>
