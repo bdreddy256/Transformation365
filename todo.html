@@ -107,15 +107,15 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCVViLvx3bHRWJwKMnVUZvE776g3v0BBmU",
-    authDomain: "todo-bcab9.firebaseapp.com",
-    projectId: "todo-bcab9",
-    storageBucket: "todo-bcab9.firebasestorage.app",
-    messagingSenderId: "170910719630",
-    appId: "1:170910719630:web:5f001878e8ad647410b3df",
-    measurementId: "G-XM43GED4G5"
-  };
+    const firebaseConfig = {
+      apiKey: "IzaSyCVViLvx3bHRWJwKMnVUZvE776g3v0BBmU",
+      authDomain: "todo-bcab9.firebaseapp.com",
+      projectId: "todo-bcab9",
+      storageBucket: "todo-bcab9.appspot.com", // ✅ Fixed this
+      messagingSenderId: "170910719630",
+      appId: "1:170910719630:web:5f001878e8ad647410b3df",
+      measurementId: "G-XM43GED4G5"
+    };
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
@@ -178,6 +178,22 @@
 
     // ✅ Load Todos on Page Load
     loadTodos();
+
+    // ✅ Debugging Helper
+    console.log("Firebase config loaded:", firebaseConfig);
+
+    const testConnection = async () => {
+      try {
+        const docRef = await addDoc(collection(db, 'todos'), { text: "Test Todo" });
+        console.log("Test doc written with ID: ", docRef.id);
+      } catch (e) {
+        console.error("Error adding document: ", e);
+      }
+    };
+
+    // Test Firebase connection
+    testConnection();
+
   </script>
 </body>
 </html>
