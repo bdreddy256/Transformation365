@@ -125,11 +125,9 @@
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
-</script>
 
-    // ✅ REPLACE ABOVE WITH YOUR ACTUAL FIREBASE SNIPPET
 
-    // 👇 MAIN LOGIC STARTS HERE
+
     let editId = null;
     const todoInput = document.getElementById('todo-input');
     const todoList = document.getElementById('todo-list');
@@ -152,7 +150,7 @@
       }
     }
 
-    // 🚀 LOAD TODOS
+
     async function loadTodos() {
       todoList.innerHTML = '';
       const querySnapshot = await getDocs(collection(db, 'todos'));
@@ -173,13 +171,13 @@
       });
     }
 
-    // ✏️ EDIT TODO
+
     async function editTodo(id, text) {
       todoInput.value = text;
       editId = id;
     }
 
-    // ❌ DELETE TODO
+
     async function deleteTodo(id) {
       await deleteDoc(doc(db, 'todos', id));
       loadTodos();
