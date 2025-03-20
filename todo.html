@@ -101,15 +101,31 @@
     <div class="todo-list" id="todo-list"></div>
   </div>
 
-  <!-- Firebase and Logic -->
+  <!-- Firebase SDK -->
   <script type="module">
-    // 👉 MAIN LOGIC STARTS HERE
+    // 👉 INSERT FIREBASE CONFIG HERE 👇
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCVViLvx3bHRWJwKMnVUZvE776g3v0BBmU",
+    authDomain: "todo-bcab9.firebaseapp.com",
+    projectId: "todo-bcab9",
+    storageBucket: "todo-bcab9.firebasestorage.app",
+    messagingSenderId: "170910719630",
+    appId: "1:170910719630:web:5f001878e8ad647410b3df",
+    measurementId: "G-XM43GED4G5"
+  };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     let editId = null;
     const todoInput = document.getElementById('todo-input');
     const todoList = document.getElementById('todo-list');
 
-    // ➕ ADD TODO
+    // ✅ Add Todo
     async function addTodo() {
       const text = todoInput.value.trim();
       if (text) {
@@ -127,7 +143,7 @@
       }
     }
 
-    // 🚀 LOAD TODOS
+    // ✅ Load Todos
     async function loadTodos() {
       todoList.innerHTML = '';
       const querySnapshot = await getDocs(collection(db, 'todos'));
@@ -148,46 +164,20 @@
       });
     }
 
-    // ✏️ EDIT TODO
-    async function editTodo(id, text) {
+    // ✅ Edit Todo
+    function editTodo(id, text) {
       todoInput.value = text;
       editId = id;
     }
 
-    // ❌ DELETE TODO
+    // ✅ Delete Todo
     async function deleteTodo(id) {
       await deleteDoc(doc(db, 'todos', id));
       loadTodos();
     }
 
-    // Load todos on page load
+    // ✅ Load Todos on Page Load
     loadTodos();
   </script>
-
-  <!-- 👉 INSERT FIREBASE CONFIG HERE 👇 -->
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyCVViLvx3bHRWJwKMnVUZvE776g3v0BBmU",
-    authDomain: "todo-bcab9.firebaseapp.com",
-    projectId: "todo-bcab9",
-    storageBucket: "todo-bcab9.firebasestorage.app",
-    messagingSenderId: "170910719630",
-    appId: "1:170910719630:web:5f001878e8ad647410b3df",
-    measurementId: "G-XM43GED4G5"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
-
 </body>
 </html>
