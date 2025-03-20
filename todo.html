@@ -26,7 +26,7 @@
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 400px;
+      max-width: 600px;
     }
 
     input, button {
@@ -89,14 +89,33 @@
     .delete-btn:hover {
       background-color: #c82333;
     }
+
+    .checkbox {
+      margin-right: 10px;
+    }
+
+    .date-input {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
   <h1>Todo App</h1>
-  <div class="todo-container">
+  
+  <div id="login-container">
+    <input type="password" id="password-input" placeholder="Enter password to access app" />
+    <button id="login-btn">Login</button>
+  </div>
+  
+  <div class="todo-container" id="todo-container" style="display:none;">
     <input type="text" id="todo-input" placeholder="Add a new todo..." />
     <button id="add-todo-btn">Add Todo</button>
+
+    <div class="date-input">
+      <label for="date-picker">Select Date:</label>
+      <input type="date" id="date-picker" />
+    </div>
 
     <div class="todo-list" id="todo-list"></div>
   </div>
@@ -126,45 +145,82 @@
     const todoInput = document.getElementById('todo-input');
     const todoList = document.getElementById('todo-list');
     const addTodoButton = document.getElementById('add-todo-btn');
-    
+    const datePicker = document.getElementById('date-picker');
+    const loginContainer = document.getElementById('login-container');
+    const todoContainer = document.getElementById('todo-container');
+    const loginBtn = document.getElementById('login-btn');
+    const passwordInput = document.getElementById('password-input');
+    const correctPassword = 'dushyanth'; // Set your password here
+
     let editId = null;
+
+    // Login function
+    loginBtn.addEventListener('click', () => {
+      const enteredPassword = passwordInput.value;
+      if (enteredPassword === correctPassword) {
+        loginContainer.style.display = 'none';
+        todoContainer.style.display = 'block';
+      } else {
+        alert('Incorrect password');
+      }
+    });
 
     // Add Todo function
     async function addTodo() {
       const text = todoInput.value.trim();
-      if (text) {
+      const selectedDate = datePicker.value;
+      if (text && selectedDate) {
+        const newTodo = {
+          text,
+          dateAdded: selectedDate,
+          completed: false,
+        };
+
         if (editId) {
           // Update existing todo
           const docRef = doc(db, 'todos', editId);
-          await updateDoc(docRef, { text });
+          await updateDoc(docRef, newTodo);
           editId = null;
         } else {
           // Add new todo
-          await addDoc(collection(db, 'todos'), { text });
+          await addDoc(collection(db, 'todos'), newTodo);
         }
+
         todoInput.value = '';
         loadTodos();
       }
     }
 
-    // Load todos from Firestore
+    // Load todos based on selected date
     async function loadTodos() {
+      const selectedDate = datePicker.value;
       todoList.innerHTML = '';
       const querySnapshot = await getDocs(collection(db, 'todos'));
       querySnapshot.forEach(doc => {
         const data = doc.data();
-        const todoItem = document.createElement('div');
-        todoItem.className = 'todo-item';
+        if (data.dateAdded === selectedDate) {
+          const todoItem = document.createElement('div');
+          todoItem.className = 'todo-item';
 
-        todoItem.innerHTML = `
-          <span>${data.text}</span>
-          <div>
-            <button class="edit-btn" onclick="editTodo('${doc.id}', '${data.text}')">Edit</button>
-            <button class="delete-btn" onclick="deleteTodo('${doc.id}')">Delete</button>
-          </div>
-        `;
-        todoList.appendChild(todoItem);
+          todoItem.innerHTML = `
+            <input type="checkbox" class="checkbox" ${data.completed ? 'checked' : ''} onclick="toggleCompletion('${doc.id}', ${data.completed})" />
+            <span>${data.text}</span>
+            <span>${data.dateAdded}</span>
+            <div>
+              <button class="edit-btn" onclick="editTodo('${doc.id}', '${data.text}')">Edit</button>
+              <button class="delete-btn" onclick="deleteTodo('${doc.id}')">Delete</button>
+            </div>
+          `;
+          todoList.appendChild(todoItem);
+        }
       });
+    }
+
+    // Toggle completion status
+    async function toggleCompletion(id, currentStatus) {
+      const docRef = doc(db, 'todos', id);
+      await updateDoc(docRef, { completed: !currentStatus });
+      loadTodos();
     }
 
     // Edit Todo
@@ -182,7 +238,8 @@
     // Event listener for Add Todo button
     addTodoButton.addEventListener('click', addTodo);
 
-    // Load todos on page load
+    // Load todos on page load (with a default date)
+    datePicker.addEventListener('change', loadTodos);
     loadTodos();
   </script>
 
