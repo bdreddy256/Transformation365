@@ -5,109 +5,102 @@ app = Flask(__name__)
 
 ec2 = boto3.client('ec2')
 
-# Fetch all subnets
-def get_subnets():
-    response = ec2.describe_subnets()
-    return response['Subnets']
 
-# Fetch specific subnet details
+def get_subnets():
+    return ec2.describe_subnets()['Subnets']
+
+
 def get_subnet(subnet_id):
-    response = ec2.describe_subnets(SubnetIds=[subnet_id])
-    return response['Subnets'][0]
+    return ec2.describe_subnets(SubnetIds=[subnet_id])['Subnets'][0]
 
 
 HTML = """
-<!DOCTYPE html>
 <html>
 <head>
-    <title>AWS Subnets</title>
-    <style>
-        body {
-            font-family: Arial;
-            margin: 20px;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #232f3e;
-            color: white;
-        }
-
-        tr:hover {
-            background-color: #f2f2f2;
-            cursor: pointer;
-        }
-
-        .details {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            background: #fafafa;
-        }
-    </style>
+<title>AWS Subnets</title>
 </head>
 <body>
 
 <h2>AWS Subnets</h2>
 
-<table>
+<table border="1">
+
 <tr>
 <th>Subnet ID</th>
 <th>Name</th>
 <th>VPC ID</th>
 <th>CIDR</th>
-<th>Availability Zone</th>
+<th>AZ</th>
 <th>Available IPs</th>
 </tr>
 
 {% for subnet in subnets %}
-<tr onclick="window.location='/?subnet_id={{ subnet.SubnetId }}'">
-<td>{{ subnet.SubnetId }}</td>
+
+<tr>
+
+<td>
+<a href="/?subnet_id={{ subnet.SubnetId }}">
+{{ subnet.SubnetId }}
+</a>
+</td>
+
 <td>
 {% for tag in subnet.get('Tags', []) %}
-    {% if tag['Key']=='Name' %}
-        {{ tag['Value'] }}
-    {% endif %}
+{% if tag['Key'] == 'Name' %}
+{{ tag['Value'] }}
+{% endif %}
 {% endfor %}
 </td>
+
 <td>{{ subnet.VpcId }}</td>
 <td>{{ subnet.CidrBlock }}</td>
 <td>{{ subnet.AvailabilityZone }}</td>
 <td>{{ subnet.AvailableIpAddressCount }}</td>
+
 </tr>
+
 {% endfor %}
+
 </table>
 
 
 {% if selected %}
-<div class="details">
+
 <h3>Subnet Details</h3>
 
-<b>Subnet ID:</b> {{ selected.SubnetId }} <br>
-<b>VPC ID:</b> {{ selected.VpcId }} <br>
-<b>CIDR:</b> {{ selected.CidrBlock }} <br>
-<b>Availability Zone:</b> {{ selected.AvailabilityZone }} <br>
-<b>Available IPs:</b> {{ selected.AvailableIpAddressCount }} <br>
-<b>State:</b> {{ selected.State }} <br>
-<b>Default for AZ:</b> {{ selected.DefaultForAz }} <br>
+<table border="1">
 
-<h4>Tags:</h4>
+<tr><td>Subnet ID</td><td>{{ selected.SubnetId }}</td></tr>
+<tr><td>VPC ID</td><td>{{ selected.VpcId }}</td></tr>
+<tr><td>CIDR</td><td>{{ selected.CidrBlock }}</td></tr>
+<tr><td>Availability Zone</td><td>{{ selected.AvailabilityZone }}</td></tr>
+<tr><td>Available IPs</td><td>{{ selected.AvailableIpAddressCount }}</td></tr>
+<tr><td>State</td><td>{{ selected.State }}</td></tr>
+
+</table>
+
+<h4>Tags</h4>
+
+<table border="1">
+
+<tr>
+<th>Key</th>
+<th>Value</th>
+</tr>
+
 {% for tag in selected.get('Tags', []) %}
-{{ tag['Key'] }} : {{ tag['Value'] }} <br>
+
+<tr>
+<td>{{ tag['Key'] }}</td>
+<td>{{ tag['Value'] }}</td>
+</tr>
+
 {% endfor %}
 
-</div>
+</table>
+
 {% endif %}
+
 
 </body>
 </html>
@@ -134,4 +127,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
